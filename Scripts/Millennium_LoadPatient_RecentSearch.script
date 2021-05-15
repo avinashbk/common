@@ -1,0 +1,64 @@
+﻿///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+(*
+Handler Name:
+   LoadPatient - search using PatientName
+
+Description: By using this handler user will be able to load the patient from text box available at the top right of powerchart application. once the PatientName is provided either patient search window loads or directly patient gets loaded.
+
+Variables:
+        PatientName: Name of the Patient the user wants to get it loaded in Application
+
+Expected Result:        
+After executing this handler either patient search window loads or directly patient gets loaded. 
+JIRA: https://jira3.cerner.com/browse/EGGPLANT-42
+
+Change Control Board:
+User:                Date:                        ID
+Puneeth S         21 March 2018        PS035864
+*)
+
+on LoadPatient PatientName
+	if ImageFound(0,"Millennium_LoadPatient_RecentSearch/Textbox_Recent")then
+		click FoundImageLocation()
+	else if imagefound(1,Text:"Recent",DPI:100,TextDifference:1,Validwords:"Recent")then 
+		click FoundImageLocation() + (45,5)
+	end if
+	TypeText PatientName,returnKey
+	wait 2
+	
+End LoadPatient
+
+(*
+Handler Name:
+   RecentPatientSearch - search using PatientName
+   Description: Searches the Patient which are used recently in the application
+   Variables:PatientName: Name of the Patient the user wants to get it loaded in Application
+Expected Result:After executing this handler patient will get loaded
+*)
+
+on RecentPatientSearch PatientName // Finding the Recent patient from Recent dropdown 
+	Put ImageLocation("Millennium_LoadPatient_RecentSearch/DropDown_Recent") into RecentDropDown
+	if ImageFound(3,"Millennium_LoadPatient_RecentSearch/DropDown_Recent")then
+		click FoundImageLocation()
+	else if ImageFound(3,Text:"Recent",DPI:160,Enableaggressivetextextraction:On)
+		click FoundImageLocation() + (25,0)
+	else 
+		LogWarning "Image or Text not found"
+	end if
+	put ImageLocation("Millennium_LoadPatient_RecentSearch/Text_One") into TopLeft_List
+	insert (1917,600) into BottonRight_List
+	set the searchRectangle to (TopLeft_List,BottonRight_List)
+	//setting the rectangle based on the patient name size(capturing the 1. image and providing the end co-ordiantes)
+	
+	if ImageFound(3, (text:PatientName))then
+		Click (Text: PatientName,DPI:100,Enableaggressivetextextraction:on,TextDifference:1,Validwords:PatientName)
+	else
+		Log "Patient Not Available in Recent DropDown"
+	end if
+	
+	set the searchRectangle to ()
+	
+end RecentPatientSearch
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+

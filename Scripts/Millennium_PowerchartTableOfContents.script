@@ -1,0 +1,30 @@
+﻿(* 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Handler Name: PowerChartTableOfContents
+ 
+Description: Click on any value in Table to Contents in Patient chart.
+
+Variables: TOCValue- Holds the value to clicked in the Table of Contents
+
+Expected Result:After executing this handler appropriate window should be visible
+ 
+JIRA # -  https://jira3.cerner.com/browse/EGGPLANT-138
+Domains Executed – 1801-TP09,2018.01.01, 2015 VDM 
+Creation Date: 15-MARCH-2018 
+Author – 
+ ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// *)
+on PowerChartTableOfContents TOCValue
+	put ImageLocation("Millennium_PowerchartTableOfContents") into Menuloc1//Assigning location of Menu image
+	Click Menuloc1
+	Typetext homeKey
+	insert Menuloc1+(-45,10) into SR_Menu
+	insert Menuloc1+(149,880) into SR_Menu
+	Click Menuloc1
+	TypeText TOCValue
+	if ImageFound(Text:TOCValue,DPI:150,searchRectangle:SR_Menu,WaitFor:5)
+		click FoundImageLocation()
+	else 
+		log TOCValue&" Is not found"
+	end if
+end PowerChartTableOfContents

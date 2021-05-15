@@ -1,0 +1,140 @@
+﻿//This function is to close all applications in the SUT machine by force killing all applications from Command line. We have added some whitelisted .exe's also, which will not close during this force cleanup process. All whitelisted apps can be found in the BATCHCODE property of this script
+//Author : VT031181 ( Vijay Tuppada ),AM061051 (M, Ajai)
+To ZeroStateCloseAllApps
+        set the searchRectangle to ()
+	Typetext altKey,escapeKey
+	Typetext shiftKey,escapeKey  //This line of code is being added as these two lines combinedly are helping to get rid of the screen freeze issue whenever it occurs.
+	Wait 1
+	Typetext windowsKey,"m"
+	Click (1,item 2 of connectioninfo().screensize-1)
+	Wait 1
+	Typetext escapeKey
+	Wait 1
+	Run Open_Application.run "cmd"
+	If IsCMDLaunched()
+		Log "Command Prompt launched"
+		Paste me.defaultPath
+		Typetext return
+		Paste me.batchcode
+		waitUntilCMDCloses
+		Click (1,item 2 of connectioninfo().screensize-1)
+		Typetext escapeKey
+		TypeText WindowsKey,"d"
+		Wait 2
+	Else
+		LogError "Command Prompt is not found on the screen. Please check.."
+	End If
+End ZeroStateCloseAllApps
+
+
+//Function that checks if CMD is launched, and if not, it will check if maximize button is found and maximizes it.
+//Returns boolean
+//Author : AM061051 (M, Ajai)
+function isCMDLaunched
+	If not ImageFound(imageName:"CommandPrompt/TitleBarIcon_CMD", waitFor:30) then return MaximizeIfImageFound()
+	return true
+end isCMDLaunched
+
+
+//Function that maximizes the CMD if maximize image is found
+//Returns boolean
+//Author : AM061051 (M, Ajai)
+function maximizeIfImageFound
+	//This logic to look for "Maximize" image is added because in some cases, there were some pop-ups which was blocking the CMD title icon
+	If ImageFound(imageName:"Cmd_Maximize", waitFor:10)
+		Click FoundImageLocation()
+		WaitFor 30, "CommandPrompt/TitleBarIcon_CMD"		
+		return true
+	End if
+	return false
+End maximizeIfImageFound
+
+
+//Handler that sets the remoteclipboard with the value passed
+//Author : AM061051 (M, Ajai)
+on AddToClipBoard value
+	Set (the RemoteClipboard,the Remoteclipboard) to (empty,value)
+	waitUntilClipBoardHasValue
+end AddToClipBoard
+
+
+//Handler that paste the sent value
+//Author : AM061051 (M, Ajai)
+on paste Value
+	AddToClipBoard value
+	Typetext controlKey,"v"
+end paste
+
+
+//Waits until remote clip board is loaded with some value
+//Author : AM061051 (M, Ajai)
+on waitUntilClipBoardHasValue
+	Repeat until the RemoteClipboard is not equal to empty or repeatindex()=100
+		Wait 0.2
+	End Repeat
+end waitUntilClipBoardHasValue
+
+
+//Waits until every instance of CMD closes on the SUT
+//Author : AM061051 (M, Ajai)
+on waitUntilCMDCloses
+	Repeat until not ImageFound(ImageName:"CommandPrompt/TitleBarIcon_CMD",WaitFor:15) or RepeatIndex()=100
+		Wait 1
+	End Repeat
+end waitUntilCMDCloses
+
+
+//Here we can have all the static properties or values which can be used inside any handler of this script
+properties
+	DefaultPath:"CD C:\Windows\System32",
+	BatchCode:<<
+taskkill /f /im apstrackingstations.exe
+taskkill /f /im apscytologyresultentry.exe
+taskkill /f /im "EDW Config Utility.exe" /T
+taskkill /f /im apscasestatus.exe
+taskkill /f /im desktoplauncher.exe
+taskkill /f /im apsoutsproctasks.exe	
+taskkill /f /im osmrequisitionorderentry.exe
+taskkill /f /im javaw.exe
+taskkill /f /im jfw.exe
+
+for /f "skip=3 tokens=1" %i in ('TASKLIST /FI "USERNAME eq %userdomain%\%username%" /FI "STATUS eq running"') do (
+if not "%i"=="svchost.exe" (
+if not "%i"=="explorer.exe" (
+if not "%i"=="tasklist.exe" (
+if not "%i"=="taskmgr.exe" (
+if not "%i"=="wscntfy.exe" (
+if not "%i"=="java.exe" (
+if not "%i"=="jp2launcher.exe" (
+if not "%i"=="VMwareTray.exe" (
+if not "%i"=="VMwareUser.exe" (
+if not "%i"=="tcrea.exe" (
+if not "%i"=="jusched.exe" (
+if not "%i"=="WinVNC.exe" (
+if not "%i"=="nc.exe" (
+if not "%i"=="cmd.exe" (
+if not "%i"=="eggplant.exe" (
+if not "%i"=="rdpclip.exe" (
+if not "%i"=="conhost.exe" (
+taskkill /f /im "%i" 
+)
+)
+)
+)
+)
+)
+)
+)
+)
+)
+)
+)
+)
+)
+)
+)
+)
+)
+exit
+>>
+end properties

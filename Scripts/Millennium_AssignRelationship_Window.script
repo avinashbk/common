@@ -1,0 +1,64 @@
+﻿///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+(*
+Handler Name:
+   AssignRelationship_window
+
+Description:Assign Relationship window allows the user to assign an particular Relation to the Patient.(Ex:Admitting Physician , PrimaryPhysician , ConsultingPhysician etc:)
+
+Relationship should not have Underscore within the text.
+
+Variables:
+       AssignRelation =  Relationship user want to assign for a patient.
+       OverrideReason = Override reason for the patient if it is set in corecodebuilder.
+       Comment = Comment a user can fill when assigning the relation.
+
+Expected Result:        
+After executing this handler User should be able to assign a relations to the Patient and click ok.
+*)
+
+on AssignRelationship AssignRelation,OverrideReason,Comment
+	//checks for the Assign a relationship image on the window , if found this will assign the relation to the patient , logs a message to the user if not found
+	if ImageFound(4, "Millennium_AssignRelationship_window/Label_AssignRelationship")
+	then
+		Click FoundImageLocation()
+	else if ImageFound(1, Text:"Assign a Relationship")
+	then
+		Click FoundImageLocation() + (0,75)
+	else
+		LogWarning "The Assign Relationship image could not be found,Investigate the Images and Text being used. Add more as needed"
+	end if
+	//Once you have found the correct image or text assign the relationship for the patient
+	
+	TypeText AssignRelation
+	
+	if ImageFound(3, (text:"Override Reason:",DPI:150,EnableaggressiveTextExtraction:on))
+		put FoundImageLocation() into OverrideLabel
+		//checks if the override reason dropdown present in the assign relationship window or not,if found fill out the reason. log message if override drop down not available.
+		
+		put "255,255,165" into RGB 
+		//RGB Value of Yellow color, once you found the value matches build a rectatangle.
+		
+		put ColorAtLocation(OverrideLabel+(0,30)) into Reason
+		if Reason is equal to RGB then 
+			//put ImageLocation("Millennium_AssignRelationship_window/Label_OverrideReason") into Relation_Window
+			//log Relation_Window
+			Put OverrideLabel +(-50,-25) into TL_RelationWindow
+			Insert OverrideLabel +(225,155) into BR_RelationWindow
+			Set the searchRectangle to (TL_RelationWindow,BR_RelationWindow)
+			Click FoundImageLocation()+(0,30)
+			Click (Text:OverrideReason)
+			if ImageFound(4, (text:"Comment:"))
+				//checks if the Comment Filed present in the assign relationship window or not,if found fill out the reason. 
+				then
+				TypeText Comment,returnKey
+			end if
+		end if
+		else
+		TypeText returnKey
+	end if
+	
+	set the searchRectangle to empty
+	
+end AssignRelationship
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

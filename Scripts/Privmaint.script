@@ -1,0 +1,41 @@
+﻿(**Change-Control:    
+Author: AJ035494,     Created-Date: 17 Aug 2018,     Modified-Date: 2 April 2018,     Reason: Initial Commit**)
+
+
+//To Grant Privilege to Role 
+to handle GrantPrivilegeToRole with strPrivilege, strPrivilegeValue, strRole
+	Waitfor 20, "Privmaint/Label_PrivilegeMaintenanceTool_Window"
+	if imagefound(5,"BrowserImages/MaximizeBrowser") then
+		click foundimagelocation()
+	end if
+	Click (image: "Privmaint/DropDown_Privilege", waitfor:15)
+	TypeText strPrivilege, returnKey
+	Click (image:"Privmaint/List_Position", waitfor:15)
+	TypeText controlKey, homeKey
+	TypeText strRole
+	TypeText returnKey
+	Click (image:"Privmaint/Icon_ShowPrivilege", waitfor:15)
+	if ImageFound(5, text:"Yes", SearchRectangle:("Privmaint/Rectangle_PrevilegeStatus_TopLeft", "Privmaint/Rectangle_PrivilegeStatus_BottomRight")) or ImageFound(5, text:"No", SearchRectangle:("Privmaint/Rectangle_PrevilegeStatus_TopLeft", "Privmaint/Rectangle_PrivilegeStatus_BottomRight")) then
+		Log "Role is already assigned with the given Privilege"
+	else
+		Log "Privmaint/Adding Previlege"		
+		Click  (image:"Privmaint/Icon_AddPrivilege", waitfor:15)		
+		Waitfor 20, "Privmaint/Label_AddPrivilege_Window"		
+		Click  (image:"Privmaint/DropDown_SelectPrivilege", waitfor:15)		
+		TypeText strPrivilege, returnKey
+		TypeText tabKey
+		TypeText tabKey
+		TypeText strPrivilegeValue, returnKey		
+		Click (image:"Privmaint/List_SelectContext", waitfor:15)
+		TypeText "Position"		
+		TypeText tabKey, returnKey		
+		Click (image:"Privmaint/List_PositonAssignment", waitfor:15)	
+		TypeText controlKey, homeKey
+		TypeText strRole
+		if ImageFound(10,(text:strRole, SearchRectangle:("Privmaint/Rectangle_PositionAssignment_TopLeft", "Privmaint/Rectangle_PositionAssignment_BottomRight"))) 
+			Click FoundImageLocation()
+		end if		
+		TypeText tabKey, rightArrow
+		TypeText returnKey
+	end if
+end GrantPrivilegeToRole

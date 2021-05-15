@@ -1,0 +1,275 @@
+﻿//Oylumpus Timer related utilities
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+(**
+Handler name:
+"Olympus_Timer_Utilities".LogInToOlympus txtUsername, txtEncodedPassword
+
+Description: A loop to fill out the username and password for each of the login screens that will display for Olympus
+
+Input: txtUsername = The specific Username you wish to use to login to Olympus
+         txtEncodedPassword = You will need to Encode your own password and use that encoded text as the txtEncodedPassword variable. 
+                                         Example to encode your Password (log EncodeText("Password"), copy the logged output and use that as your password. 
+
+Expected Results: The specified web page is entered into the web browser and the specified web page opens. 
+**)
+to LogInToOlympus txtUsername, txtEncodedPassword
+	log "Log in to the Olympus Portal using an Encrypted Password"
+	Repeat until ImageFound(5, Image:"Google_Chrome/Olympus_Portal_Images/Olympus_Login_Images/Textbox_Username") = False
+		//////////////////////////////////////////// Username Section ////////////////////////////////////////////
+		Click FoundImageLocation()
+		TypeText controlKey, "a", deleteKey
+		Wait 1
+		TypeText "WHQ_NT_DOMAIN\",txtUsername
+		Wait 1
+		TypeText tabKey
+		//////////////////////////////////////////// Password Needs to be Encrypted First(See notes above) ////////////////////////////////////////////
+		Click "Google_Chrome/Olympus_Portal_Images/Olympus_Login_Images/Textbox_Password"
+		TypeText controlKey, "a", deleteKey
+		Wait 1
+		TypeEncodedText txtEncodedPassword
+		Wait 1
+		TypeText returnKey
+		WaitFor 10, "Google_Chrome/Button_Reload_This_Page"
+	End Repeat	
+end LogInToOlympus
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+(**
+Handler name:
+"Olympus_Timer_Utilities".SelectClient txtClientName
+
+Description: Types in the Client Name from the Client Dropdown
+
+Input: txtClientName = The specific Client Name you wish to select from the Client Dropdown.
+
+Expected Results: The specified Client Name is selected to help filter the list
+**)
+to SelectClient txtClientName
+	log "Type in Client name in Client Dropdown"
+	If ImageFound(5, Image:"Google_Chrome/Olympus_Portal_Images/Olympus_RTMS_Discrete_Page_Images/Dropdown_Client")
+		Click FoundImageLocation()
+		TypeText txtClientName
+		Wait 1 
+		TypeText returnKey
+		Wait 1
+		else
+		LogWarning "The Client textbox image could not be found at this time. Please investigate the Image collection being used and add as necessary."
+	End If
+end SelectClient
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+(**
+Handler name:
+"Olympus_Timer_Utilities".TypeStartTime tmeStartTime
+
+Description: Types in the Start Time
+
+Input: tmeStartTime = The specific Start Time you wish to type in the Start Time Textbox.
+
+Expected Results: The Start Time is entered into the Start Time Textbox to filter down the list further.
+**)
+to TypeStartTime tmeStartTime
+	log "Type in the Start Time"
+	If ImageFound(5, Image:"Google_Chrome/Olympus_Portal_Images/Olympus_RTMS_Discrete_Page_Images/Textbox_Start_Date")
+		Click FoundImageLocation() + (-20, 45)
+		TypeText tmeStartTime
+		Wait 1
+	else 
+		logWarning "The Start Date Textbox Image could not be found. Please investigate the Image collection and add as needed."
+	End if
+end TypeStartTime
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+(**
+Handler name:
+"Olympus_Timer_Utilities".TypeEndTime tmeEndTime
+
+Description: Types in the End Time
+
+Input: tmeEndTime = The specific End Time you wish to type in the End Time Textbox.
+
+Expected Results: The End Time is entered into the End Time Textbox to filter down the list of results further.
+**)
+to TypeEndTime tmeEndTime
+	log "Type in the End Time"
+	If ImageFound(5, Image:"Google_Chrome/Olympus_Portal_Images/Olympus_RTMS_Discrete_Page_Images/Textbox_End_Date")
+		Click FoundImageLocation() + (-20, 45)
+		TypeText tmeEndTime
+		Wait 1
+		else 
+		logWarning "The End Date Textbox Image could not be found. Please investigate the Image collection and add as needed."
+	End if
+end TypeEndTime
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+(**
+Handler name:
+"Olympus_Timer_Utilities".TypeWildcard txtWildcard
+
+Description: Types in the Timer name Wildcard
+
+Input: txtWildcard = The specific Timer name Wildcard you wish to type in the Wildcard Textbox.
+
+Expected Results: The Timer name Wildcard is entered into the Wildcard Textbox to filter down the list of results further.
+**)
+to TypeWildcard txtWildcard
+	log "Type in the Timer name Wildcard"
+	If ImageFound(5, Image:"Google_Chrome/Olympus_Portal_Images/Olympus_RTMS_Discrete_Page_Images/Textbox_Wildcard")
+		Click FoundImageLocation()
+		Wait 1
+		Typetext controlKey, "a"
+		Wait 1
+		TypeText deleteKey
+		Wait 1
+		TypeText txtWildcard
+		Wait 1
+	else 
+		logWarning "The End Date Textbox Image could not be found. Please investigate the Image collection and add as needed."
+	End if
+end TypeWildcard
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+(**
+Handler name:
+"Olympus_Timer_Utilities".SelectGo
+
+Description: Clicks the Go Button
+
+Expected Results: The Timer list is loaded if available at the time of selecting Go.
+**)
+to SelectGo
+	log "Select the Go button"
+	Click "Google_Chrome/Olympus_Portal_Images/Olympus_RTMS_Discrete_Page_Images/Button_Go"
+	Waitfor 15, "Google_Chrome/Olympus_Portal_Images/Olympus_RTMS_Discrete_Page_Images/Textbox_Search"
+end SelectGo
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+(**
+Handler name:
+"Olympus_Timer_Utilities".TypeInSearch txtSearchText
+
+Description: Types in the Search text in the Search Textbox
+
+Input: txtSearchText = The specific Text you wish to type in the Search Textbox. (Example: The User Name to narrow down the list for the specific user)
+
+Expected Results: The Search Text is entered into the Search Textbox to filter down the list of results further.
+**)
+to TypeInSearch txtSearchText
+	log "Type in the Search textbox to further filter down the results."
+	If ImageFound(5, "Google_Chrome/Olympus_Portal_Images/Olympus_RTMS_Discrete_Page_Images/Textbox_Search")
+		Click FoundImageLocation()
+		TypeText controlKey, "a"
+		Wait 1
+		TypeText deleteKey
+		Wait 1
+		TypeText txtSearchText	
+	else 
+		logWarning "The Search Textbox Image could not be found. Please investigate the Image collection and add as needed."
+	End If
+end TypeInSearch
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+(**
+Handler name:
+"Olympus_Timer_Utilities".ReturnOlympusDataSearchRectangle
+
+Description: Returns the Search rectangle of the Timer Data area
+
+Expected Results: The Search Rectangle of the Timer Data is returned to use for Validations or Decisions. 
+**)
+to ReturnOlympusDataSearchRectangle
+	log "Return the Olympus Timer Data Search Rectangle."
+	Insert ImageRectangle("Google_Chrome/Olympus_Portal_Images/Olympus_RTMS_Discrete_Page_Images/TL_Timer_Data").topLeft into SR
+	Insert ImageRectangle("Google_Chrome/Olympus_Portal_Images/Olympus_RTMS_Discrete_Page_Images/BR_Timer_Data").bottomRight into SR
+	Return SR
+end ReturnOlympusDataSearchRectangle
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+(**
+Handler name:
+"Olympus_Timer_Utilities".LoopUntilDataDisplays txtSearchText
+
+Description: Continues to refresh the Timer Data list until a Timer Data displays in the list. 
+
+Input: txtSearchText = The specific Text you wish to type in the Search Textbox. (Example: The User Name to narrow down the list for the specific user)
+
+Expected Results: When the Timer Data displays exit the loop and continue with the test. 
+**)
+to LoopUntilDataDisplays txtSearchText
+	log "Loop by refreshing data until specified Timer Data displays"
+	
+	Put "Olympus_Timer_Utilities".ReturnOlympusDataSearchRectangle() into SR //This is Search Rectangle around the data being stored in a variable. 
+	Put ReadText(SR, EnableAggressiveTextExtraction:True) into OlympusData //This reads the text from my search rectangle and stores in a variable
+	Log OlympusData
+	Wait 2
+	
+	
+	If OlympusData contains "No matching records found"
+	then
+		
+		Repeat until OlympusData does not contain "No matching records found" 
+			
+			wait 1
+			Olympus_Timer_Utilities.SelectGo
+			wait 5
+			Olympus_Timer_Utilities.TypeInSearch txtSearchText
+			Wait 3
+			
+			Put "Olympus_Timer_Utilities".ReturnOlympusDataSearchRectangle into SR //This is Search Rectangle around the data being stored in a variable. 
+			Put ReadText(SR, EnableAggressiveTextExtraction:True) into OlympusData //This reads the text from my search rectangle and stores in a variable
+			Log OlympusData
+			Wait 45
+			
+		End repeat
+		
+	else if OlympusData contains "No data available in table"
+	then
+		
+		Repeat until OlympusData does not contain "No data available in table" 
+			
+			wait 1
+			Olympus_Timer_Utilities.SelectGo
+			wait 5
+			Olympus_Timer_Utilities.TypeInSearch txtSearchText
+			Wait 3
+			
+			Put "Olympus_Timer_Utilities".ReturnOlympusDataSearchRectangle into SR //This is Search Rectangle around the data being stored in a variable. 
+			Put ReadText(SR, EnableAggressiveTextExtraction:True) into OlympusData //This reads the text from my search rectangle and stores in a variable
+			Log OlympusData
+			Wait 45
+			
+		End repeat
+		
+	End If
+	
+end LoopUntilDataDisplays
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+(**
+Handler name:
+"Olympus_Timer_Utilities".scrollRight numCount
+
+Description: Scrolls the Timer Data list to the right. 
+
+Input: numCount = The specific number of right arrows needed to reach your end destination
+
+Expected Results: The timer Data list will scroll to the right the number of times specified by the user. 
+**)
+to scrollRight numCount
+	click (960,540) //This clicks the center of the screen to put focus into the Timer data list. 
+	Repeat numCount times
+		TypeText rightArrow
+	End Repeat
+end scrollRight
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+

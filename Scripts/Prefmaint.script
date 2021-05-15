@@ -1,0 +1,704 @@
+﻿
+-----------------------------------------------------------------------------------------------------------------------------------
+(*Handler Name: SelectApplication
+Author:MM034699
+Input: ApplicationName
+Output: NA
+Description:From Preference Form window, Select Application (e.g. PowerChart) from Application drop down*) 
+------------------------------------------------------------------------------------------------------------------------------------
+To SelectApplication Application
+	Log "Selecting" && Application &&"from application dropdown"
+	put ImageRectangle( "Prefmaint/Text_Application").bottomLeft() into SRectangle
+	insert SRectangle+(233,150) into SRectangle
+	Click (Image:"Prefmaint/Icon_DownarrowinPreferenceForm",searchRectangle:SRectangle), 
+	typetext "P" --to put focus inside droplist.
+	typetext homeKey --moves to first option in list.
+	put ImageRectangle( "Prefmaint/Text_Application").bottomLeft() into SRectangle
+	insert SRectangle+(245,150) into SRectangle
+	Repeat until readtext(SRectangle) contains Application
+		put readtext(SRectangle) into Firstcollection
+		TypeText pageDown
+		TypeText upArrow --added to handle similar texts (Ex: Pharmacy, Pharmacy Batch, etc)
+		wait 1
+		put readtext(SRectangle) into secondcollection
+		If Firstcollection =secondcollection then 
+			exit repeat
+		End If
+	End Repeat
+	If ImageFound(2, Text:Application,searchrectangle:SRectangle)
+		Click FoundImageLocation()
+	else
+		return "False"
+	end if
+End SelectApplication
+
+-----------------------------------------------------------------------------------------------------------------------------------
+(*Handler Name: SelectPosition
+Author:MM034699
+Input: Position Name
+Output: NA
+Description:Selecting Position from Dropdown.*)
+------------------------------------------------------------------------------------------------------------------------------------
+On SelectPosition Position
+	Log "Selecting" && Position &&"from Position dropdown"
+	put ImageRectangle("Prefmaint/Text_Position").bottomLeft() into SRectangle
+	insert SRectangle+(233,150) into SRectangle
+	Click (Image:"Prefmaint/Icon_DownarrowinPreferenceForm" ,searchRectangle:SRectangle)
+	typetext Position,returnKey
+End SelectPosition
+
+-----------------------------------------------------------------------------------------------------------------------------------
+(*Handler Name: AddPreference
+Author:MM034699
+Input: Preference
+Output: NA
+Description:Adding new preference.*)
+------------------------------------------------------------------------------------------------------------------------------------
+to AddPreference Preference
+	Log "Adding" && Preference 
+	put ImageRectangle (Text:"Available Preferences").topleft() into SRectangle
+	insert SRectangle+(400,115) into SRectangle
+	Repeat until readtext(SRectangle,EnableAggressiveTextExtraction:"True",DPI:173) contains Preference
+		//log readtext(SRectangle,EnableAggressiveTextExtraction:"True",DPI:173)  --for troubleshooting		
+		put readtext(SRectangle) into Firstcollection
+		TypeText pageDown
+		TypeText pageDown
+		wait 1
+		put readtext(SRectangle) into secondcollection
+		If Firstcollection =secondcollection then 
+			exit repeat
+		End If
+	End Repeat
+	If ImageFound(2,Text:Preference,searchrectangle:SRectangle,EnableAggressiveTextExtraction:"True",DPI:173) then
+		Click FoundImageLocation()
+		Click "Prefmaint/Button_DownwardArrow"
+		Click "Prefmaint/Button_OK"
+	else
+		return "False"		
+	end if		
+End AddPreference
+
+-----------------------------------------------------------------------------------------------------------------------------------
+(*Handler Name: ModifyFreetextPreference
+Author:Marathe,Manisha
+Input: Preference
+Output: NA
+Description:Modifying Free text Preference value.*)
+------------------------------------------------------------------------------------------------------------------------------------ 
+to ModifyFreeTextPreference Preference,Value
+	
+	Log "Maximize" && "Preference Form"
+	Typetext windowskey & uparrow -- "Resetting Focus"
+	Click "Prefmaint/Text_PREFERENCENAME"
+	TypeText homeKey
+	Log "Modifying" && Preference &&"for FreeText values"
+	Click "Prefmaint/Text_PREFERENCENAME"
+	TypeText controlKey, a
+	TypeText controlKey, c
+	
+	--Since all the copied preferences are in item 1 of list, split functionality is used here to move each preference to different item of the list.
+	put split (RemoteClipboard(),return) into PrefList
+	
+	--If preference is defined at Application and User/Position level, when preferences are copied into RemoteClipboard, preferences were getting duplicated. Due to that the focus was moving to different Preference and modifying that particular Preference value. So here unique items of "PrefList" is moved to another list:"UniquePrefList"
+	put the unique items of PrefList into UniquePrefList
+	
+	Repeat the number of items of UniquePrefList times
+		if item repeatindex() of UniquePrefList is Preference then
+			Log "got it on line"&&repeatindex()-1
+			put repeatindex()-1 into Prefposition
+			exit repeat                          
+		end if
+	End Repeat	
+	TypeText downArrow  repeated (Prefposition-1) times
+	//repeated -- goes to preference 
+	TypeText rightArrow,"a"--enter some text to select editable field
+	TypeText controlKey,"a"
+	TypeText backspace //This condition to set the value to empty field
+	TypeText Value	
+	set the RemoteClipboard to empty--Clearing the content of Remoteclipboard
+	
+End ModifyFreeTextPreference
+
+-----------------------------------------------------------------------------------------------------------------------------------
+(*Handler Name: ModifyListPreference
+Author:Marathe,Manisha
+Input: Preference Name
+Output: NA
+Description:Modifying Preference with droplist values.*)
+------------------------------------------------------------------------------------------------------------------------------------
+to ModifyListPreference Preference,Value
+	Log "Maximize" && "Preference Form"
+	Typetext windowskey & uparrow -- "Resetting Focus"
+	Click "Prefmaint/Text_PREFERENCENAME"
+	TypeText homeKey
+	Log "Modifying" && Preference &&"for FreeText values"
+	click "Prefmaint/Text_PREFERENCENAME"
+	TypeText controlKey, a
+	TypeText controlKey, c
+	
+	--Since all the copied preferences are in item 1 of list, split functionality is used here to move each preference to different item of the list.
+	put split (RemoteClipboard(),return) into PrefList
+	
+	--If preference is defined at Application and User/Position level, when preferences are copied into RemoteClipboard, preferences were getting duplicated. Due to that the focus was moving to different Preference and modifying that particular Preference value. So here unique items of "PrefList" is moved to another list:"UniquePrefList"
+	put the unique items of PrefList into UniquePrefList
+	
+	Repeat the number of items of UniquePrefList times
+		if item repeatindex() of UniquePrefList contains Preference then
+			Log "got it on line"&&repeatindex()-1
+			put repeatindex()-1 into Prefposition
+			exit repeat                          
+		end if
+	End Repeat
+	TypeText downArrow repeated (Prefposition-1) times -- goes to preference 
+	TypeText rightArrow
+	TypeText Value
+	set the RemoteClipboard to empty--Clearing the content of Remoteclipboard
+End ModifyListPreference
+
+-----------------------------------------------------------------------------------------------------------------------------------
+(*Handler Name: Delete Preference
+Author:MM034699
+Input:Preference
+Output: NA
+Description:Deleting the Preference from list.*)
+------------------------------------------------------------------------------------------------------------------------------------
+to DeletePreference Preference
+	Log "Maximize Preference Form"
+	Typetext windowskey & uparrow
+	Log "Resetting Focus"
+	Click "Prefmaint/Text_PREFERENCENAME"
+	TypeText homeKey
+	Log "Deleting" && Preference 
+	put ImageRectangle ("Prefmaint/Text_LEVELinExistingPreferences").topright() into SRectangle
+	insert SRectangle+(550,850) into SRectangle
+	Repeat until readtext(SRectangle) contains Preference
+		put readtext(SRectangle) into Firstcollection
+		ScrollWheelDown 10
+		wait 1
+		put readtext(SRectangle) into secondcollection
+		If Firstcollection =secondcollection then 
+			exit repeat
+		End If
+		//log readtext(SRectangle)  --for troubleshooting
+	End Repeat
+	If ImageFound(2,Text:Preference,searchrectangle:SRectangle) then
+		Click FoundImageLocation()
+		Click (Text:"Delete Preference")
+	else
+		return "False"	
+	end if		
+End DeletePreference
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+(*Handler Name: ClickUnderAvailableTabs
+Input: Preference (Holds the Preference name to be clicked)
+Output: NA
+Description: Clicks the desired Preference name with-in the Define Window under Available Tabs
+Author: JR051162
+
+Note: This handler works for Add Tab,Add Component and Add Preference*)
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+on ClickUnderAvailableTabs Preference
+	put ImageRectangle("Prefmaint/Label_AvailableTabs","Prefmaint/Label_AvailablePreferences").topleft() into AvailTabLoc
+	insert AvailTabLoc+(0,18) into SR_AvailTab
+	insert AvailTabLoc+(402,117) into SR_AvailTab
+	Click AvailTabLoc+(22,100)
+	Click AvailTabLoc+(22,100)
+	if ImageFound(Text:Preference,DPI:150,searchRectangle:SR_AvailTab,WaitFor:5,EnableAggressiveTextExtraction:"YES",ValidWords:Preference)
+		click FoundImageLocation()
+		Click "Prefmaint/Button_DownwardArrow"
+		Click "Prefmaint/Button_Apply_DefineWindow"
+		Click "Prefmaint/Button_OK"
+	else
+		put ReadText(SR_AvailTab) into FirstSetVal
+		repeat until ImageFound(Text:Preference,DPI:150,searchRectangle:SR_AvailTab,WaitFor:5,EnableAggressiveTextExtraction:"YES",ValidWords:Preference)
+			if  FirstSetVal=SecondSetVal//Compares the First set of value with the Second
+				log Preference&" Is not found"
+				put 0 into flag
+				Exit repeat
+			end if 
+			put SecondSetVal into  FirstSetVal
+			TypeText pageDown
+			put ReadText(SR_AvailTab) into SecondSetVal
+		end repeat
+		click FoundImageLocation()
+		if flag=0 then
+		else
+			Click "Prefmaint/Button_DownwardArrow"
+			Click "Prefmaint/Button_Apply_DefineWindow"
+			Click "Prefmaint/Button_OK"
+		end if
+	end if
+end ClickUnderAvailableTabs
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+(*Handler Name: ClickLevel
+Input: Level Ex:"PowerChart|Flowsheet Dialog within Inbox|Flowsheet Dialog within Inbox|Flowsheet"
+Output: NA
+Description: Clicks the desired Hierarchy.
+Note: Any Preference beyond the visibility should be given as the partial text
+Ex: Actual Hierarchy - Powerchart|Clinical Notes Dialog within Flowsheet|Clinical Notes Dialog within Flowsheet, but in application the visibilty of Flowsheet word is restricted to "Flowshe". Hence the Visible text should be added
+
+Expected Hierarchy - Powerchart|Clinical Notes Dialog within Flowshe|Clinical Notes Dialog within Flow
+Author: JR051162*)
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+on ClickLevel Levels
+	TypeText windowsKey&upArrow
+	repeat 5 times //Inorder to get into zero state this loop is used
+		wait 4
+		TypeText leftArrow
+	end repeat
+	TypeText rightArrow
+	put split (Levels,"|") into Level_Extract
+	put item 1 of Level_Extract into FirstVal
+	put item 2 of Level_Extract into SecondVal
+	put item 3 of Level_Extract into ThirdVal
+	put item 4 of Level_Extract into ForthVal
+	put ImageLocation("Prefmaint/Label_Level") into LevelLoc
+	insert LevelLoc+(-9,28) into SR_Tabs
+	insert LevelLoc+(220,849) into SR_Tabs
+	if SecondVal="" then // If the second value is empty click on first value location
+		Click LevelLoc+(39,18)
+	else
+		put ImageRectangle(searchRectangle:SR_Tabs,EnableAggressiveTextExtraction:"True",DPI:170,ValidWords:SecondVal,Text:SecondVal).topLeft() into SecondLocTL
+		put () into SR_Tabs
+		Click SecondLocTL+(-32,7)
+		wait 3
+		insert SecondLocTL+(-29,16) into SR_Tabs
+		insert SecondLocTL+(187,798) into SR_Tabs
+		if ThirdVal="" then // If the third value is empty click on second value location
+			Click SecondLocTL
+		else
+			set SR_Tabs to ()
+			
+			insert LevelLoc+(-9,20) into SR_Tabs
+			insert LevelLoc+(220,849) into SR_Tabs
+			
+			put ImageRectangle(searchRectangle:SR_Tabs,EnableAggressiveTextExtraction:"True",DPI:230,ignoreCase:True,Text:ThirdVal).topLeft() into ThirdLocTL
+			put () into SR_Tabs
+			if  ForthVal="" then // If the forth value is empty click on third value location
+				Click ThirdLocTL
+				
+			else
+				Click ThirdLocTL+(-30,7)
+				wait 3
+				insert ThirdLocTL+(-26,14) into SR_Tabs
+				insert ThirdLocTL+(147,645) into SR_Tabs
+				Click(searchRectangle:SR_Tabs,EnableAggressiveTextExtraction:"True",DPI:170,ValidWords:ForthVal,Text:ForthVal)
+				
+			end if
+		end if
+	end if
+end ClickLevel
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+(*
+Handler Name:Prefmaint.LoginToPrefMaint_SelectUserAndSearch UserName,Password,Domain,Application,UserPosition,UserLastName,UserFirstName
+                
+This handler performs workflow of login to Prefmaint ,search user and clicking Search Preferences icon.
+
+Parameters:                    
+UserName: Login User ID
+Password: Login User Password
+Domain: Execution Domain Name
+Application:Application name to be selected
+UserPosition: Position of User
+UserLastName: Last Name of User 
+UserFirstName: First Name of User
+
+Expected Result:
+
+After executing this handler user Preferences Level Tree structure displays for user to continue configure preferences.
+*)
+On LoginToPrefMaint_SelectUserAndSearch UserName,Password,Domain,Application,UserPosition,UserLastName,UserFirstName
+
+	TypeText windowsKey&"r"
+	TypeText "prefmaint.exe",returnKey
+	waitfor 5,"Millennium_Login_window/Textbox_Username"
+	Run "Millennium_Login_window".LogIntoMillenniumApps UserName,Password,Domain
+	waitfor 20,"Prefmaint/Text_Application"
+	//Select Application type and User position from dropdown
+	Run "Prefmaint".SelectApplication Application
+	Run "Prefmaint".SelectPosition UserPosition
+	//Enter user's name and click search preferences icon to list the tree structure
+	TypeText tabKey,UserLastName&","&UserFirstName
+	Click "Prefmaint/Icon_SearchPreference_64bit"
+End LoginToPrefMaint_SelectUserAndSearch
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+(*
+Handler Name:Prefmaint.SetDropdowntypePreference PreferenceList
+
+This handler modifies the given List type preference if its under existing preferences. If the preference name is not found then, it shall Add the preference and modify the value.
+
+Parameters:                    
+PreferenceList: Specify the list type preferences with respective preference values.
+Format in which PreferenceList parameter should be defined as,
+
+"<PreferenceName1>":"<PreferenceValue>","<PreferenceName2>":"<PreferenceValue>"
+
+Expected Result:
+
+After executing this handler user hall be able to configure the List typr preferences to required value. 
+*)
+On SetDropdowntypePreference PreferenceList
+	Repeat with each item key of PreferenceList's keys
+		set ValueToSet to PreferenceList.(key)
+		//If the preference already exists then modify the existing preference
+		if "Prefmaint".ModifyListPreference (key,ValueToSet) is "False"
+			Click "Prefmaint/Button_AddPreference_64bit"
+			Run "Prefmaint".AddPreference (key)
+			"Prefmaint".ModifyListPreference (key,ValueToSet)	
+		Else
+			Log ("Preference "&&key&&" is already in the added list.So, continued modifying preference to given value "&&ValueToSet&&"")
+		end if
+	End repeat
+	Click "Prefmaint/Button_Apply_18"
+end SetDropdowntypePreference
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+(*
+Handler Name:Prefmaint.SetFreetexttypePreference FreextextPreferenceslist
+
+This handler modifies the given Free text type preference if its under Existing Preferences.If the preference name is not found then, it shall add the preference and modify the value.
+
+Parameters:                    
+FreextextPreferenceslist: Specify the free text type preferences with respective preference values.
+Format in which FreextextPreferenceslist parameter should be defined as,
+
+"<PreferenceName1>":"<PreferenceValue>","<PreferenceName2>":"<PreferenceValue>"
+
+Expected Result:
+
+After executing this handler user shall be able to configure the Free text type preferences to required value.
+*)
+On SetFreetexttypePreference FreextextPreferenceslist
+
+	Repeat with each item key of FreextextPreferenceslist's keys
+		set ValueToSet to FreextextPreferenceslist.(key)
+		//If the preference already exists then modify the existing preference
+		if  "Prefmaint".ModifyFreeTextPreference (key,ValueToSet) is "False"
+			Click "Prefmaint/Button_AddPreference_64bit"
+			Run "Prefmaint".AddPreference (key)
+			"Prefmaint".ModifyFreeTextPreference(key,ValueToSet)	
+		Else
+			Log("Preference "&&key&&" is already in the added list.So, continued modifying preference to given value "&&ValueToSet&&"")
+		end if
+	End repeat
+	Click "Prefmaint/Button_Apply_18"
+end SetFreetexttypePreference
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+(*
+HandlerName: "Prefmaint".OpenPrefmaint Username, Password, Domain
+Description: Handles opening prefmaint from VM with local millennium install
+
+Parameters:
+Username: Username used to sign in to Powerchart
+Password: Password for username used to sign in
+Domain: Domain you wish to select for testing. (Example: SOLM64, SOLGM, 1501DEP, 15STPDEP)
+ 
+Expected Result: Prefmaint is successfully opened
+*)
+to OpenPrefmaint Username, Password, Domain
+	TypeText windowsKey & "r"
+	TypeText "prefmaint.exe", returnKey
+	WaitFor 5, "Millennium_Login_window/Textbox_Username"
+	
+	Run "Millennium_Login_window".LogIntoMillenniumApps UserName, Password, Domain
+end OpenPrefmaint
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+(*
+HandlerName: "Prefmaint".OpenApplicationLevelPrefs Application
+Description: Handles opening application level preferences
+
+Parameters:
+Application: The application for which we are viewing preferences (i.e. Powerchart, First Net)
+ 
+Expected Result: Application level preferences are loaded
+*)
+to OpenApplicationLevelPrefs Application
+	Run "Prefmaint".SelectApplication Application
+	Click "Prefmaint/Icon_SearchPreference_64bit"
+end OpenApplicationLevelPrefs
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+(*
+HandlerName: "Prefmaint".TogglePVCNameOption ToggleOn
+Description: Checks if 'View PVC_Name' is on or off and toggles it based on user input for parameter
+
+Parameters: 
+ToggleOn: true if we are toggling option on, false if we are toggling option off
+ 
+Expected Result: View PVC_Name is toggled on or off
+*)
+to TogglePVCNameOption ToggleOn
+	
+	//This search rectangle is set for preference form window where view button is selected.
+	Set TopLeftImage to  imageRectangle("Prefmaint/Label_PreferenceFormWindow").TopLeft()
+	Set BottomRightImage to ImageLocation("Prefmaint/Button_Apply_18")+(50,50)
+	
+	Click(image:"Prefmaint/Button_View",SearchRectangle:(TopLeftImage,BottomRightImage),WaitFor:5)
+	
+	if ToggleOn 
+		if ImageFound(ImageName: "Prefmaint/Icon_ViewPVCName_Unselected", WaitFor:5, SearchRectangle:(TopLeftImage,BottomRightImage))
+			Click FoundImageLocation()
+		Else
+			Log "In prefmaint the toggling option is already turned on "
+		end if
+	else 
+		if ImageFound(ImageName: "Prefmaint/Icon_ViewPVCName_Selected", WaitFor:5, SearchRectangle:(TopLeftImage,BottomRightImage))
+			Click FoundImageLocation()
+		Else
+			Log "In prefmaint the toggling option is already turned off"
+		end if
+	end if
+	
+	TypeText escapeKey
+end TogglePVCNameOption
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+(*
+HandlerName: "Prefmaint".AddPreferenceWithImage PreferenceImage
+Description: Adds preference with given pref image. This is meant as a more robust way of searching for preferences
+when"Prefmaint".AddPreference fails because of ReadText() command.
+
+Parameters: 
+Preference: Preference image which we want to add
+ 
+Expected Result: Preference is added to pref list
+*)
+to AddPreferenceWithImage PreferenceImage
+	if ImageFound(ImageName: "Prefmaint/Button_AddPreference_64bit", WaitFor: 10)
+		Click FoundImageLocation() 
+	end if
+	
+	put imageRectangle("Prefmaint/Label_AvailablePreferences").TopLeft() into TopLeftImage
+	put imageRectangle("Prefmaint/Button_Apply_DefineWindow").bottomRight() + (10, 10) into BottomRightImage
+	set the SearchRectangle to (TopLeftImage, BottomRightImage)
+	
+	WaitFor 5, "Prefmaint/Label_AvailablePreferences"
+	
+	Repeat for 2 minutes
+		if ImageFound(ImageName: PreferenceImage, WaitFor: 10)
+			Click FoundImageLocation()
+			Exit Repeat
+		end if
+		TypeText pageDown
+	End Repeat
+	
+	Click "Prefmaint/Button_DownwardArrow"
+	Click "Prefmaint/Button_OK"
+	
+	set the SearchRectangle to empty
+End AddPreferenceWithImage
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+(*
+HandlerName: "Prefmaint".ValidatePrefValue PVC_Image, ExpectedPVCValue
+Description: Handles validation of expected preference value
+
+Parameters: 
+PVC_Image: Preference for which we are validating for
+ExpectedPVCValue: Value we are expecting to find
+*)
+To ValidatePrefValue PVC_Image, ExpectedPVCValue
+	Repeat for 5 minutes
+		If ImageFound(ImageName: PVC_Image)
+			# Validate default blank value
+			put imageRectangle(PVC_Image).TopRight() into SRectangle
+			insert SRectangle + (400, 15) into SRectangle
+			put ReadText(SRectangle, ValidWord:"*") into PrefValue
+			
+			if PrefValue is empty and ExpectedPVCValue is empty
+				LogSuccess "Default value is blank"
+			else if PrefValue contains ExpectedPVCValue
+				LogSuccess "Correct preference value found"
+			else 
+				LogWarning "Expected preference value not found"
+			end if
+			Exit repeat
+		End If
+		
+		Click "Prefmaint/Icon_DownarrowinPreferenceForm"
+	End Repeat
+End ValidatePrefValue 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+(*
+HandlerName: "Prefmaint".ValidatePrefValueWithImage PreferenceImage, ExpectedPVCValue_Image
+Description: Handles validation of expected preference value
+
+Parameters: 
+	PreferenceImage: Preference image which we are validating
+	ExpectedPVCValue_Image: Image of the value we are expecting to find
+Expected Result: True, if the value matches the ExpectedPVCValue_Image. Else, false. 
+Logs a warning if the preference is not found.
+*)
+To ValidatePrefValueWithImage PreferenceImage, ExpectedPVCValue_Image
+	Set preferenceLocation to GetPreferenceLocation(PreferenceImage)
+	If preferenceLocation is not (0,0)
+		set topLeft to imageRectangle(PreferenceImage).TopRight()
+		set SRectangle to (topLeft, topLeft+(400,15))
+		
+		Return ImageFound(ImageName: ExpectedPVCValue_Image,searchRectangle:SRectangle)
+	Else
+		LogWarning PreferenceImage & "not found"
+	End If
+End ValidatePrefValueWithImage
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+(*
+HandlerName: "Prefmaint".GetPreferenceHelp Preference
+Description: Returns the help text for the provided preference. This handler opens the help window of the preference, copies the help text, and closes the help window.
+
+Parameters: 
+	Preference: Image of the preference
+Expected Result: IF found returns the help text of the preference. Else returns an empty string.
+*)
+to GetPreferenceHelp Preference
+	Log "Opening" && Preference && "help"
+	GetPreferenceLocation Preference
+	Set preferenceLocation to the result
+	If preferenceLocation is not (0,0)
+		Click preferenceLocation
+		RightClick preferenceLocation
+		put FoundImageLocation() into SRectangle
+		insert FoundImageLocation()+(250, 75) into SRectangle
+		If ImageFound(2,Text:"Help",searchrectangle:SRectangle) then
+			Click FoundImageLocation()
+			waitFor 5,"Prefmaint/Icon_HelpMenuTitle"
+			TypeText controlKey, a
+			TypeText controlKey, c
+			TypeText altKey,F4
+			return RemoteClipboard(40)
+		End If
+	Else
+		LogWarning "Help for " & Preference & " not found"
+		return ""
+	End If
+End GetPreferenceHelp
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+(*
+HandlerName: "Prefmaint".GetPreferenceLocation Preference
+Description: Returns the location of the required preference.
+
+Parameters: 
+	Preference: Image of the preference
+Expected Result: If found, returns the location of the preference. Else, logs a warning and returns (0,0).
+*)
+to GetPreferenceLocation Preference
+	Log "Maximize Preference Form"
+	Typetext windowskey & uparrow -- "Resetting Focus"
+	Click "Prefmaint/Text_PREFERENCENAME"
+	TypeText homeKey
+	put ImageRectangle ("Prefmaint/Text_LEVELinExistingPreferences").topright() into SRectangle
+	insert SRectangle+(550,850) into SRectangle
+	MoveTo "Prefmaint/Text_PREFERENCENAME"
+	set FirstCollection to readText(SRectangle)
+	set SecondCollection to FirstCollection
+	Repeat
+		If ImageFound(imageName:Preference, waitFor:2, searchRectangle:SRectangle) 
+			return FoundImageLocation()
+		End If
+		ScrollWheelDown 10
+		wait 1
+		put readtext(SRectangle) into secondcollection
+		If Firstcollection=secondcollection then 
+			LogWarning "Preference " & Preference & " not found"
+			return (0,0)
+		End If
+		set FirstCollection to SecondCollection
+	End Repeat
+	
+End GetPreferenceLocation
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+(*
+HandlerName: "Prefmaint".ApplyPreferences Level
+Description: Clicks on the Apply button in the Preference Form window.
+
+Parameters: 
+	Level: The level at which the preference is present. When the apply button is pressed in prefmaint, the contents in the levels tab temporarily vanish and appear back after the apply operation is completed. 
+We are using this behavior to determine that the apply succeeded. So, if the preference is changed in Powerchart->Chart->Document Viewing, then a value for Level would be either 'Document Viewing'(preferred) or 'Chart'. 
+Note that 'Powerchart' is not a valid value here because it would not vanish in the first place.
+Expected Result: True, if the apply is successful. Else, false.
+*)
+to ApplyPreferences Level
+	Log "Maximize Preference Form"
+	Typetext windowskey & uparrow -- "Resetting Focus"
+	Click "Prefmaint/Button_Apply_18"
+	wait 5 // Hard wait for save preference
+	put ImageLocation("Prefmaint/Label_Level") into LevelLoc
+	insert LevelLoc+(-9,28) into SRectangle
+	insert LevelLoc+(220,849) into SRectangle
+	If ImageFound(40, text:Level, searchrectangle:SRectangle)
+		return true
+	Else
+		return false
+	End If
+End ApplyPreferences
+//////////////////////////////////////////////////////////////////////////////////////////////
+(*Handler Name:"Prefmaint".SetPrefMaintPreference UserName, Password, Domain, ApplicationName, PrefToggle, PrefLevel, PrefPVCName, PrefValue, IsDropDown
+
+Description: Opens PrefMaint and sets the value of the given preference save and close the prefmaint 
+
+Parameter: Username= username for prefmaint login
+               Password= password for prefmaint login
+               Domain= domain for prefmaint login
+               ApplicationName= prefered appliction to be selected. (Example: Powerchart)
+               PrefToggle= boolean value(true/false) to check PVC_name is on /off.
+               PrefLevel=set the desired preference (Example: Powerchart/DocumentViewing)
+               PrefPVCName= prefmaint row name (Example: dyndoc_revise_after_auth )
+               PrefValue= value for the prefrence name. To set value blank pass empty string "" .   
+               IsDropDown= boolen value (true/false) if IsDropDown set to true - prefValue select from dropdownlist else IsDropDown set to false prefValue is free text                  
+Expected Result: enters the given input value
+*)
+to SetPrefMaintPreference UserName, Password, Domain, ApplicationName, PrefToggle, PrefLevel, PrefPVCName, PrefValue, IsDropDown
+
+	// Open Prefmaint
+	Run "Prefmaint".OpenPrefmaint Username, Password, Domain
+	
+	// Navigate Prefmaint to the proper application 
+	Run "Prefmaint".OpenApplicationLevelPrefs ApplicationName
+	
+	// Toggle PVCName on 
+	Run "Prefmaint".TogglePVCNameOption PrefToggle
+	
+	// Preference level
+	Run "Prefmaint".ClickLevel PrefLevel
+	
+	//Modify the preference input value
+	If IsDropDown is true Then
+		Run "Prefmaint".ModifyListPreference PrefPVCName,PrefValue   	
+	Else
+		Run "Prefmaint".ModifyFreeTextPreference  PrefPVCName,PrefValue 
+	End If
+	
+	//Save and close prefmaint
+	Run "Prefmaint".SaveAndClosePrefmaint
+	
+End SetPrefMaintPreference
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+(*Handler Name:"Prefmaint".SaveAndClosePrefmaint 
+
+Description: Handler for save and close prefmaint              
+Expected Result: save and close the prefmaint.
+*)
+to SaveAndClosePrefmaint 
+
+	Click(image:"Prefmaint/Button_Apply_18")
+	Click(image:"Prefmaint/Button_OK")
+	Waitfor 30,image:"Prefmaint/Icon_SearchAtLevel" //Wait for search icon to make sure save operation completed.
+	TypeText altKey, f4  //Closes preference form
+	TypeText altKey, f4  //Closes preferences maintenance tool
+	
+end SaveAndClosePrefmaint

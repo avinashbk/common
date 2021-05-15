@@ -1,0 +1,92 @@
+﻿(* 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Handler Name: SelectMenuSubMenu 
+ 
+Description: Select Menu and SubMenu under Toolbar in Powerchart application(Ex: Menu-Task, SubMenu-Refresh) 
+
+Variables: ReferenceVal - Reference value for targeted search area (Ex: Task, File)
+Menu - Value to clicked in ToolBar(Ex: View)
+SubMenu - Value to be clicked under Menu option
+SubMenu1 - Value to be clicked under SubMenu option
+SubMenu2 - Value to be clicked under SubMenu1 option
+SubMenu3 - Value to be clicked under SubMenu2 option
+ 
+Expected Result:  After executing this handler User should be able get the window based on the action performed
+
+Author – Puneeth S
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// *)
+
+
+on SelectMenuSubMenu ReferenceVal,Menu,SubMenu,SubMenu1,SubMenu2,SubMenu3
+	
+	put item 1 of EveryImageLocation(Text:ReferenceVal,DPI:150,EnableAggressiveTextExtraction:on) into loc1
+	insert loc1+(-10,-13) into Ref_SR
+	insert loc1+(550,8) into Ref_SR
+	//Search reactangle gets generated based on the Reference value
+	
+	put ImageRectangle(Text:Menu,searchRectangle:(Ref_SR)).bottomLeft() into menuloc1
+	Click (Text:Menu,searchRectangle:(Ref_SR)) //Clicks on the Menu specified
+	insert menuloc1+(260,1025) into menuloc2
+	Wait 2
+	//Search reactangle gets generated based on the Menu location
+	
+	If ImageFound(5,text:SubMenu,DPI:150, searchRectangle:(menuloc1,menuloc2),EnableAggressiveTextExtraction:on) then 
+		put FoundImageLocation() into submenuloc
+		click FoundImageLocation()
+	else if ImageFound(3, "Millennium_SelectMenu_SubMenus") then
+		
+		//This block gets executed, if the SubMenu is not found and a DropDown Icon is present
+		
+		repeat until ImageFound(5,text:SubMenu,DPI:72, searchRectangle: (menuloc1,menuloc2))
+			if ImageFound(5,text:SubMenu,DPI:72, searchRectangle: (menuloc1,menuloc2)) then
+				put FoundImageLocation() into submenuloc
+				click FoundImageLocation()
+				Exit repeat
+			else
+				set DropDownLoc to ImageLocation("Millennium_SelectMenu_SubMenus")//DropDown icon location is associated to DropDownLoc variable
+				put DropDownLoc-(0,30) into HoverVal
+				MoveTo "Millennium_SelectMenu_SubMenus"//Mouse hover on the DropDown Icon
+				wait 3
+				Moveto HoverVal		
+			end if
+		end repeat
+		if ImageFound(5,text:SubMenu,DPI:72, searchRectangle: (menuloc1,menuloc2)) then
+			put FoundImageLocation() into submenuloc//SubMenu value location is noted, incase SubMenu1 is assigned
+			click FoundImageLocation()//Click on the SubMenu specified
+		end if
+		
+	else
+		Log SubMenu &" Value not found"
+		
+	end if
+	
+	if SubMenu1="" then
+	else
+		insert submenuloc+(118,-70) into SubMenu1_SR
+		insert submenuloc+(374,450) into SubMenu1_SR
+		put ImageLocation(Text:SubMenu1,searchRectangle:(SubMenu1_SR),waitfor:5,DPI:150, EnableAggressiveTextExtraction:"YES") into submenu2loc//SubMenu1 value location is noted, in case SubMenu1 is assigned
+		Click FoundImageLocation()
+		// Clicks on the SubMenu1
+	end if
+	
+	if SubMenu2="" then
+	else
+		insert submenu2loc+(24,-70) into SubMenu2_SR
+		insert submenu2loc+(255,200) into SubMenu2_SR
+		put ImageLocation(5,Text:SubMenu2,searchRectangle:(SubMenu2_SR),DPI:150, EnableAggressiveTextExtraction:"YES") into submenu3loc//SubMenu2 value location is noted, incase SubMenu2 is assigned
+		Click (Text:SubMenu2,searchRectangle:(SubMenu2_SR),ValidCharacters:SubMenu2)
+		// Clicks on the SubMenu2
+	end if
+	
+	if SubMenu3="" then
+	else
+		insert submenu3loc+(82,-2) into SubMenu3_SR
+		insert submenu3loc+(332,151) into SubMenu3_SR
+		Click (Text:SubMenu3,searchRectangle:(SubMenu3_SR),ValidCharacters:SubMenu3)
+		// Clicks on the SubMenu3
+	end if
+	
+	set the searchRectangle to empty
+	
+end SelectMenuSubMenu

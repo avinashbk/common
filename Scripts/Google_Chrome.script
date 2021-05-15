@@ -1,0 +1,60 @@
+﻿//Google Chrome Utilities
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+(**
+Handler name:
+"Google_Chrome".OpenGoogleChrome
+
+Description: Double Clicks the Google Chrome Button on the SUT to Open Google Chrome.
+
+Expected Results: Google Chrome is opened to the default page.
+**)
+to OpenGoogleChrome
+	log "Open Google Chrome"
+	DoubleClick "Google_Chrome/Button_Google_Chrome"
+	WaitFor 15, "Google_Chrome/Button_Reload_This_Page"
+end OpenGoogleChrome
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+(**
+Handler name:
+"Google_Chrome".TypeInWebAddress txtWebAddress
+
+Description: Types in the Web Address into the Web Browser
+
+Input: txtWebAddress = The specific web address you wish to access from the web browser. (Any web address will work here.)
+
+Expected Results: The specified web page is entered into the web browser and the specified web page opens. 
+**)
+to TypeInWebAddress txtWebAddress
+	log "Type Web Address in the Web Browser"
+	Click ImageLocation(Image:"Google_Chrome/Button_Reload_This_Page") + (300, 0)
+	TypeText controlKey, "a"
+	Wait 1
+	TypeText deleteKey
+	Wait 1
+	TypeText txtWebAddress
+	Wait 1
+	TypeText returnKey
+	Waitfor 10, "Google_Chrome/Button_Bookmark_This_Page" //The reload this page button may not display if you go to a web address where you have to immediately login (Example: Olympus Portal). I have used the bookmark image here but this might need to be changed at a later time if found to be inadequate for some web pages. 
+end TypeInWebAddress
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+(**
+Handler name:
+"Google_Chrome".MaximizeWindow 
+
+Description: Checks for the Maximize button and Restore Down button. If the window is not maximized already this will maximize it. 
+
+Expected Results: If the window is not maximized then this will maximize it otherwise move to next step. Log warning if both buttons can't be found.
+**)
+to MaximizeWindow 
+	log "Maximize the Google Chrome window if it is not already maximized."
+	If ImageFound(3, "Google_Chrome/Button_Maximize")
+		Click FoundImageLocation()
+	Else If ImageFound(3, "Google_Chrome/Button_Restore_Down")
+		log "The window is already Maximized"
+	Else 
+		LogWarning "The Maximize and Restore Down buttons can not be found. Please investigate the image collection being used and add more if needed."
+	End If
+end MaximizeWindow

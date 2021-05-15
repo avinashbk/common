@@ -1,0 +1,188 @@
+﻿///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+(*
+Handler Name:
+   PatientSearch_window - Search the patient and encounter using LastName, FirstName
+
+
+Description:Patient Search window allows the user to search for a particular patient using LastName , FirstName and the encounter associated with using FIN NBR(PowerChart, Snsurgcasemgr , SNsurginet , PhaMedMgr etc:)
+
+if the Encounter is not found in the first search list of the window ,handler will loop untill the the text is found or loop untill the search field exeeds the limit.
+
+Variables:
+         LastName = LastName of the Patient to Use
+         FirstName = FirstName of the Patient to Use
+
+Expected Result:        
+After executing this handler User should be able to Search the Patient and select the encounter and Click Ok by using the Financial number.
+
+JIRA # -  https://jira3.cerner.com/browse/EGGPLANT-42
+Creation Date: 21-MARCH-2018
+Author – PS035864
+         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// *)
+
+Function Verify_Patient_Search_Window
+	//Checks if the patient search window is displayed. Returns a message information to the Script.
+	
+	if ImageFound(5, "Millennium_PatientSearch_Window/Label_PatientSearch")
+		Return (True,"Patient search window Loaded")
+	else if ImageFound(5, Text:"Patient Search",DPI:180,Enableaggressivetextextraction:on,CaseSensitive:on)
+		Return (True,"Patient search window Loaded using OCR")
+	else
+		Return (False,"Patient Search window was not able to find,Investigate the Images and Text being used. Add more as needed")
+	end if
+	
+End Verify_Patient_Search_Window
+
+on patientsearch LastName,FirstName
+	
+	Put ImageLocation(Waitfor:20,Image:"Millennium_PatientSearch_Window/Label_PatientSearch") into Loc_PatientSearch
+	insert Loc_PatientSearch +(-50,0) into Loc_PatientSearch1
+	insert Loc_PatientSearch +(200,500) into Loc_PatientSearch2
+	set the searchRectangle to (Loc_PatientSearch1,Loc_PatientSearch2)
+	
+	//Type's the LastName of the patient in the Patient seach window
+	if ImageFound(5,"Millennium_PatientSearch_Window/Textbox_LastName") 
+		click FoundImageLocation()
+		TypeText LastName
+	else if ImageFound(5,Text:"Last Name:",DPI:180,Enableaggressivetextextraction:on,CaseSensitive:on)then
+		click FoundImageLocation() + (0,20)
+		TypeText LastName
+	else 
+		LogWarning "The LastName Text Box could not be found,Investigate the Images and Text being used. Add more as needed "
+	end if
+	
+	
+	//Type's the FirstName of the patient in the Patient seach window
+	if ImageFound(5, "Millennium_PatientSearch_Window/Textbox_FirstName")then
+		click FoundImageLocation()
+		TypeText FirstName
+	else if ImageFound(5,Text:"First Name:",DPI:180,Enableaggressivetextextraction:on,CaseSensitive:on)then
+		click FoundImageLocation() + (0,20)
+		TypeText FirstName
+		LogWarning "The First Name Text Box could not be found,Investigate the Images and Text being used. Add more as needed "
+	end if
+	TypeText returnKey 
+	
+	set the searchRectangle to ()
+	
+end patientsearch
+
+(*Handler Name:FindPatientName
+Description:FindPatientName Handler is used when LastName and FirstName field is not available in Patient search window.
+Variables: - Name - Name of the patient
+Expected Result: After executing this handler User should be able to find patient with Name.*)
+
+on FindPatientName Name
+
+	Put ImageLocation("Millennium_PatientSearch_Window/Label_PatientSearch") into Loc_PatientSearch
+	insert Loc_PatientSearch +(-50,0) into Loc_PatientSearch1
+	insert Loc_PatientSearch +(200,500) into Loc_PatientSearch2
+	set the searchRectangle to (Loc_PatientSearch1,Loc_PatientSearch2)
+	
+	if ImageFound(5, "Millennium_PatientSearch_Window/Textbox_Name")then
+		click FoundImageLocation()
+		TypeText Name
+	else if ImageFound(5, (text:"Name:",DPI:180,Enableaggressivetextextraction:on,CaseSensitive:on))
+		click FoundImageLocation() + (0,20)
+		TypeText Name
+	else
+		LogWarning "The Name Text Box could not be found,Investigate the Images and Text being used. Add more as needed "
+	end if
+	TypeText returnKey
+	
+	set the searchRectangle to ()
+	
+end FindPatientName
+
+(*Handler Name:FindPatientFIN
+Description:FindPatientFIN handler can be used when finding the patient using FIN number
+Variables: - FIN - FIN number of the patient
+Expected Result: After executing this handler User should be able to find patient with FIN Number.*)
+
+on FindPatientFIN FIN
+	Put ImageLocation("Millennium_PatientSearch_Window/Label_PatientSearch") into Loc_PatientSearch
+	insert Loc_PatientSearch +(-60,0) into Loc_PatientSearch1
+	insert Loc_PatientSearch +(200,500) into Loc_PatientSearch2
+	set the searchRectangle to (Loc_PatientSearch1,Loc_PatientSearch2)
+	if ImageFound(10, "Millennium_PatientSearch_Window/Textbox_FIN#")
+		click FoundImageLocation()
+		TypeText FIN
+	else if ImageFound(5, (text:"FIN",DPI:180,Enableaggressivetextextraction:on,CaseSensitive:on))
+		click FoundImageLocation()
+		TypeText FIN
+	else 
+		LogWarning "The FIN Text Box could not be found,Investigate the Images and Text being used. Add more as needed "
+	end if
+	TypeText returnKey
+	
+	set the searchRectangle to ()
+	
+end FindPatientFIN
+
+
+(*Handler Name:NameSearch
+Description:NameSearch Hanlder creates a searchrectangle and tries to identify the name of the patient through sex or name
+Variables: -PatientName
+Expected Result: After executing this handler User should be able to find the patient with given PatientName.*)
+
+on NameSearch PatientName
+	
+	Put ImageLocation("Millennium_PatientSearch_Window/Label_Name") into Loc_PatientSearch
+	put Loc_PatientSearch +(260,200) into TL_PatientSearch
+	click ImageLocation("Millennium_PatientSearch_Window/Label_Name") + (0,30)
+	if ImageFound(10, (text:PatientName,DPI:180,Enableaggressivetextextraction:on,searchRectangle:(Loc_PatientSearch,TL_PatientSearch),CaseSensitive:on)) then
+		click FoundImageLocation()
+	else 
+		put ReadText(Loc_PatientSearch,TL_PatientSearch) into PreviousListData //PreviousListDataPreviousListData variable stores the patient names of values from first Set
+		repeat until ImageFound(Text:PatientName,DPI:150,searchRectangle:(Loc_PatientSearch,TL_PatientSearch),WaitFor:5)
+			if  PreviousListData = CurrentListData//Compares the PreviousListData of Patient Names with CurrentListData of Patient Names
+				return "False"
+				log PatientName& "is not found"
+				Exit repeat
+			end if 
+			put CurrentListData into PreviousListData
+			TypeText pageDown
+			put ReadText(Loc_PatientSearch,TL_PatientSearch) into CurrentListData
+		End repeat
+		click FoundImageLocation()
+	end if
+	
+	set the searchRectangle to ()
+	
+end NameSearch
+
+(*Handler Name:EncounterSearch
+Description:EncounterSearch Handler creates a searchrectangle and tries to identify the encounter for a patient through FIN number
+Variables: -FINNBR
+Expected Result: After executing this handler User should be able to find the encounter with given FINNBR.*)
+
+on EncounterSearch FINNBR
+	
+	Put ImageLocation("Millennium_PatientSearch_Window/Label_FIN") into Loc_PatientSearch
+	put Loc_PatientSearch +(80,180) into TL_PatientSearch
+	click ImageLocation("Millennium_PatientSearch_Window/Label_FIN") + (0,30)
+	if ImageFound(10, (text:FINNBR,DPI:180,Enableaggressivetextextraction:on,searchRectangle:(Loc_PatientSearch,TL_PatientSearch),CaseSensitive:on)) then
+		click FoundImageLocation()
+	else 
+		put ReadText(Loc_PatientSearch,TL_PatientSearch) into PreviousListData 
+		//PreviousListData variable stores the patient names of values from first Set
+		repeat until ImageFound(Text:FINNBR,DPI:150,searchRectangle:(Loc_PatientSearch,TL_PatientSearch),WaitFor:5)
+			if  PreviousListData = CurrentListData//Compares the PreviousListData of Patient Names with CurrentListData of Patient Names
+				return "False"
+				log FINNBR& "is not found"
+				Exit repeat
+			end if 
+			put CurrentListData into PreviousListData
+			TypeText pageDown
+			put ReadText(Loc_PatientSearch,TL_PatientSearch) into CurrentListData
+		End repeat
+		click FoundImageLocation()
+	end if
+	
+	set the searchRectangle to ()
+	
+end EncounterSearch
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+

@@ -1,0 +1,123 @@
+﻿
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+(**
+Handler: CoreCodeBuilder.searchCodeSet "14029"
+
+Description: Used to search the codeset in Corecodebuilder application.
+-->numCodeset:Enter the code set value want to search.Ex 14029
+**)
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+to searchCodeSet numCodeSet
+	Waitfor 30,("CoreCodeBuilder/Label_CodeSetSearch")
+	//keep focus on corecodebuilder application
+	Click ("CoreCodeBuilder/Label_CodeSetSearch")
+	Typetext windowskey & upArrow	
+	wait 3 //Maximize Corecodebuilder window and wait for 3 seconds to get window maximized.
+	DoubleClick ImageLocation("CoreCodeBuilder/Label_CodeSetSearch")+(2,30)
+	TypeText homekey&shiftkey&endkey
+	Typetext backspace
+	wait 2 //Wait for application to get refreshed.
+	TypeText numCodeSet
+	wait 3
+	if ImageFound(10,"CoreCodeBuilder/CheckBox_AllUnchecked")
+		Click "CoreCodeBuilder/CheckBox_AllUnchecked"
+	end if	
+	TypeText tabKey	
+	TypeText altKey&"s"
+	wait 5 //wait to search the results.
+end searchCodeSet
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+(**
+Handler: CoreCodeBuilder.activateAndInactivateCodeValue "HISTORY","Check","OPTION","1"
+
+Description:This handler can be used the Activate and Inactivate particular codevalue in codeset results and also set the Code value extension field value.
+-->strCDFMeaning:Enter the CDFMeaning/Display/DisplayKey.It should be unique in the table.
+-->strCheckOrUncheck:Enter "Check" to Activate the CDFMeaning and "UnCheck" to Inactivate.
+-->strFieldName:(Optional)Enter the Field name user wants to modify in CodeValueExtension Tab in Code Value Management window.
+-->strFieldValue:(Optional)Enter the Field value .ex "1"
+-->imgColumnName:pass the image of column name under folder "CoreCodeBuilder/ColumnName"
+-->StrEndEffectedDate(Optional): enter EndEffectedDate 
+**)
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+to activateAndInactivateCodeValue imgColumnName,strCDFMeaning,strCheckOrUncheck,strFieldName,strFieldValue,StrEndEffectedDate
+	//sort columns
+	Click imgColumnName
+	wait 3//wait for columns to get sorted in alphebetical order
+	TypeText controlKey& homekey	//Zero State
+	set the searchRectangle to ImageRectangle(imgColumnName)+(0,-5,RemoteScreenSize().x,10)
+	//expand column to fullest lenght
+	DoubleClick  item 1 of EveryImageLocation("CoreCodeBuilder/CoreCodeBuilder_Seperator")
+	set the SearchRectangle to ()
+	wait 1
+	set the searchRectangle to ImageRectangle(imgColumnName)+(0,-5,RemoteScreenSize().x,10)
+	set EndSepLoc to item 1 of EveryImageLocation("CoreCodeBuilder/CoreCodeBuilder_Seperator")
+	set the searchRectangle to (15,item 2 of ImageRectangle(imgColumnName)+(-5),item 3 of ImageRectangle(imgColumnName)+(0),item 4 of ImageRectangle(imgColumnName)+(10))
+	set StartSepLoc to last item of EveryImageLocation("CoreCodeBuilder/CoreCodeBuilder_Seperator")
+	set the searchRectangle to ()
+	if ImageFound(3,(text:strCDFMeaning,EnableAggresiveTextExtraction:On,IgnoreSpaces:On,searchRectangle:(StartSepLoc.x,StartSepLoc.y+(8),EndSepLoc.x,950)))
+		DoubleClick FoundImageLocation()
+	else
+		Repeat until ImageFound(2,(text:strCDFMeaning,EnableAggresiveTextExtraction:On,IgnoreSpaces:On,searchRectangle:(StartSepLoc.x,StartSepLoc.y+(8),EndSepLoc.x,950)))
+			if ImageFound("EndOfScroll") then 
+				LogWarning "Not able to find given CDFMeaning"
+				exit handler
+			end if
+			TypeText pageDown
+			wait 3 //let application get loaded.
+		End Repeat	
+	end if	
+	DoubleClick FoundImageLocation()
+	wait 3 // let Code Value Management window get loaded.
+	Typetext windowskey & upArrow	
+	wait 3 //Maximize Code Value Management window and wait for 3 seconds to get window maximized.
+	if strCheckOrUncheck equals "Check" And ImageFound(1,"CheckBox_Unchecked")
+		click "CheckBox_Unchecked"			
+	Else if  strCheckOrUncheck equals "UnCheck" And ImageFound(1,"CheckBox_Checked")
+		click  "CheckBox_Checked"	
+	end if
+	if StrEndEffectedDate is not empty
+		DoubleClick ImageRectangle("CoreCodeBuilder/Label_EndEffectDtTm").bottomRight+(50,-5)
+		typetext deleteKey
+		typetext StrEndEffectedDate
+	end if
+	wait 3 //let application get loaded.
+	if strFieldName is not equal to empty and strFieldValue is not equal to empty
+		Click (Text:"Code Value Extension",EnableAggresiveTextExtraction:On,IgnoreSpaces:On,ValidWords:"*",SearchRectangle:ImageRectangle("CoreCodeBuilder/Window/CodeValueManagement")+(10,60,600,85))
+		set the searchRectangle to ImageRectangle("ColumnName_FieldName")+(0,-5,RemoteScreenSize().x,10)
+		//expand column to fullest lenght
+		DoubleClick item 1 of EveryImageLocation("CoreCodeBuilder/CoreCodeBuilder_Seperator")
+		set the SearchRectangle to ()
+		wait 2
+		//set SR for column in CVE
+		set the searchRectangle to ImageRectangle("ColumnName_FieldName")+(0,-5,RemoteScreenSize().x,10)
+		set EndSepLoc to item 1 of EveryImageLocation("CoreCodeBuilder/CoreCodeBuilder_Seperator")
+		set the searchRectangle to (15,item 2 of ImageRectangle("ColumnName_FieldName")+(-5),item 3 of ImageRectangle("ColumnName_FieldName")+(0),item 4 of ImageRectangle("ColumnName_FieldName")+(10))
+		set StartSepLoc to last item of EveryImageLocation("CoreCodeBuilder/CoreCodeBuilder_Seperator")
+		set the searchRectangle to ()
+		Repeat until ImageFound(2,(text:strFieldName,EnableAggresiveTextExtraction:On,validCharacters:strFieldName,IgnoreSpaces:On,searchRectangle:(StartSepLoc.x,StartSepLoc.y+(5),EndSepLoc.x,300)))
+			wait 2
+			If ImageFound(3,("EndOfScroll"))
+				LogWarning "Not able to find given Field Name"
+				exit handler		
+			End If	
+			TypeText pageDown
+			wait 2 //let application get loaded.
+		End Repeat
+		click FoundImageLocation()
+		TypeText tabKey
+		TypeText tabKey
+		TypeText returnKey
+		TypeText shiftKey&homekey		
+		TypeText deleteKey
+		TypeText strFieldValue	
+		TypeText tabKey
+	end if	
+	TypeText altKey&"O"
+	WaitFor 10,imgColumnName	
+end activateAndInactivateCodeValue
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
